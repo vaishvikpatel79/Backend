@@ -24,7 +24,7 @@ from sqlalchemy import create_engine
 app = Flask(__name__)
 
 # CORS(app)
-CORS(app, origins=["http://localhost:3000"])
+CORS(app)
 
 # base_dir = os.path.abspath(os.path.dirname(__file__))
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://database_owner:gY3Xv4kBxVyw@ep-little-tooth-a1ohlzy4.ap-southeast-1.aws.neon.tech/database?sslmode=require'
