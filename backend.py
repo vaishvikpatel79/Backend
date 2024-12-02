@@ -397,6 +397,96 @@ def inventoryInsert():
         app.logger.error(f"Entry Didn't got inserted: {str(e)}")
         return jsonify({"message': 'Entry didn't got inserted."}), 500
 
+@app.route('/saveInventoryOptimization/<userId>',methods=['POST'])
+def saveHistory(userId):
+    
+    payload = request.get_json()
+
+    if payload == None:
+        return jsonify({'error' : 'No data provided'}),400
+    
+    date=datetime.today().strftime('%Y-%m-%d')
+    budget = payload.get('budget')
+    months = payload.get('months')
+    state = payload.get('state')
+    products = payload.get('products')
+    optimizedInventory = payload.get('optimizedInventory')
+
+    profit = optimizedInventory.get('profit')
+    quantities = optimizedInventory.get('quantities')
+
+    if(months > 12 or months < 1):
+        return jsonify({'error' : 'not a valid month'}),401
+    
+    if(len(products) != len(quantities)):
+        return jsonify({'error' : 'invalid data handeled'}),402
+    
+    dict = {}
+
+    for i in range(len(products)):
+        dict[products[i].get('subcategory')] = quantities[i],products[i].get('category')
+    
+    dict=list(dict.items())
+
+    try: 
+        with db.session.begin():
+            
+            uh = userHistory(userId=userId,profit=profit,budget=budget,months=months,state=state,date=date)
+
+            db.session.add(uh)
+            db.session.flush()
+
+            hid = uh.hId
+
+            for tup in dict:
+                db.session.add(userHistoryProducts(hId=hid,quantity=tup[1][0],subcategory=tup[0],category=tup[1][1]))
+            
+            db.session.commit()
+    
+    except Exception as e:
+        db.session.rollback()
+    
+
+    except Exception as e:
+        return jsonify({'error':'not able to commit to database'}),403
+    
+    return jsonify({'message':'done!'}),200
+
+
+@app.route('/getInventoryOptimizations/<userId>',methods=['GET'])
+def getHistory(userId):
+    user_history_items = userHistory.query.filter(userHistory.userId==userId).all()
+
+    data = {"list":[]}
+
+    for item in user_history_items:
+
+        li = []
+
+        for p in item.products:
+            li.append(
+                {
+                    "category": p.category,
+                    "subcategory": p.subcategory,
+                    "quantity" : p.quantity
+                }
+            )
+
+        data['list'].append(
+            {
+                "date":item.date,
+                "budget": item.budget,
+                "months": item.months,
+                "state": item.state,
+                "profit": item.profit,
+                "products": li
+            }
+        )
+
+    # Return the data as a JSON response
+    return jsonify(data)
+
+
 @app.route('/products', methods=['GET', 'POST'])
 def getProductsByCategory():
     category = request.args.get('category')
