@@ -197,6 +197,9 @@ def sales_prediction(state, item_cat, subcat, months,user_prev_sale):
 
     predicted=math.floor(user_prev_sale*(1+change_percent))
 
+    if predicted<(user_prev_sale*3)/4:
+        predicted=math.floor((user_prev_sale*3)/4)
+
     return predicted
 
 
