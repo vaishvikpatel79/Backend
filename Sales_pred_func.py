@@ -48,7 +48,7 @@ supervised_data = create_supervised(train_data[relevant_columns], 12)
 
 # Function to predict cumulative sales
 def predict_sales(state, item_category, subcategory, num_months):
-    if not (1 <= num_months <= 6):
+    if not (1 <= num_months <= 12):
         raise ValueError("Number of months must be between 1 and 6.")
     
     input_data = pd.DataFrame({
