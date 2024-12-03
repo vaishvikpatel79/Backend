@@ -6,6 +6,64 @@ from sklearn.linear_model import LinearRegression
 import joblib
 import math
 
+item_categories = {
+    'Electronics': 'Electronics',
+    'Fashion': 'Clothes',
+    'Office Supplies': 'Furniture',
+    'Books': 'Books',
+    'Home & Kitchen': 'Home Appliances',
+    'Toys  & Games': 'Toys',
+    'Health & Beauty': 'Beauty & Personal Care',
+    'Sports & Outdoors': 'Groceries',
+    'Automotive': 'Furniture',
+    'Pet Supplies': 'Footwear',
+    'Stationeries': 'Stationery',
+}
+
+item_sub = {
+    'Smartphone': 'Smartphone',
+    'Laptop': 'Laptop',
+    'Smartwatch': 'Smartwatch',
+    'Television': 'Smartphone',
+    'Camera': 'Laptop',
+    
+    'Shirts': 'Shirts',
+    'Pants': 'Pants',
+    'Dresses': 'Dresses',
+    'Jackets': 'Jackets',
+    'Socks': 'Socks',
+
+    'Pens': 'Pens',
+    'Notebooks': 'Notebooks',
+    'Markers': 'Markers',
+    'Staplers': 'Staplers',
+    'Folders': 'Folders',
+
+    'Fiction': 'Fiction',
+    'Non-fiction': 'Non-fiction',
+    'Textbooks': 'Textbooks',
+    'Magazines': 'Magazines',
+    'Comics': 'Comics',
+
+    'Cookware': 'Refrigerator',
+    'Fuurniture': 'Microwave',
+    'Home Decor': 'Washing Machine',
+    'Storage': 'Air Conditioner',
+    'Cleaning': 'Vacuum Cleaner',
+
+    'Action Figures': 'Action Figures',
+    'Puzzles': 'Puzzles',
+    'Board Games': 'Board Games',
+    'Dolls': 'Dolls',
+    'Remote Control Cars': 'Remote Control Cars',
+
+    'Skincare': 'Skincare',
+    'Haircare': 'Haircare',
+    'Makeup': 'Makeup',
+    'Perfume': 'Perfume',
+    'Body Lotion': 'Body Lotion',
+}
+
 def create_supervised(df, lag=1):
     columns = [df.shift(i) for i in range(1, lag + 1)]
     columns.append(df)
@@ -49,15 +107,15 @@ supervised_data = create_supervised(train_data[relevant_columns], 12)
 # Function to predict cumulative sales
 def predict_sales(state, item_category, subcategory, num_months):
     if not (1 <= num_months <= 12):
-        raise ValueError("Number of months must be between 1 and 6.")
+        raise ValueError("Number of months must be between 1 and 12.")
     
     input_data = pd.DataFrame({
         'state': [state] * num_months,
         'item category': [item_category] * num_months,
         'subcategory': [subcategory] * num_months,
         'festival': ['No Festival'] * num_months,
-        'date': pd.date_range(start=pd.to_datetime('today'), periods=num_months, freq='ME')    
-        })
+        'date': pd.date_range(start=pd.to_datetime('today'), periods=num_months, freq='M')    # i have changed from ME to M (freq)
+    })
     
     encoded_input = encoder.transform(input_data[['state', 'item category', 'festival']])
     encoded_input_df = pd.DataFrame(encoded_input, columns=encoder.get_feature_names_out(['state', 'item category', 'festival']))
@@ -77,7 +135,7 @@ def predict_sales(state, item_category, subcategory, num_months):
 
     cumulative_sales = predictions.sum()  
 
-    return cumulative_sales  
+    return cumulative_sales
 
 # Function to predict cumulative sales
 def prev_sales_predict(state, item_category, subcategory, num_months):
@@ -114,7 +172,17 @@ def prev_sales_predict(state, item_category, subcategory, num_months):
     return cumulative_sales  
 
 
-def sales_prediction(state, item_category, subcategory, months,user_prev_sale):
+def sales_prediction(state, item_cat, subcat, months,user_prev_sale):
+    if item_cat in item_categories:
+        item_category = item_categories[item_cat]
+    else:
+        item_category = item_cat
+    
+    if subcat in item_sub:
+        subcategory = item_sub[subcat]
+    else:
+        subcategory = subcat
+        
     pred_sales = predict_sales(state, item_category, subcategory, months)
     prev_sales = prev_sales_predict(state, item_category, subcategory, months)
 
@@ -130,5 +198,6 @@ def sales_prediction(state, item_category, subcategory, months,user_prev_sale):
     predicted=math.floor(user_prev_sale*(1+change_percent))
 
     return predicted
+
 
 
